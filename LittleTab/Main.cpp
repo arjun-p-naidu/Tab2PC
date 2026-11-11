@@ -11,7 +11,7 @@
 #include <windows.h>
 #include <winuser.h>
 #include <iostream>
-//#include <cstdint>
+#include <cstdint>
 
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -30,7 +30,8 @@ HSYNTHETICPOINTERDEVICE g_penDevice = nullptr;
 void SetupVirtualPen() {
 	g_penDevice = CreateSyntheticPointerDevice(PT_PEN, 1, POINTER_FEEDBACK_DEFAULT);
 	if (!g_penDevice) {
-		std::cerr << "Failed to create synthetic pen. Error" << GetLastError << std::endl;
+		// Fixed: was GetLastError (no parentheses), which printed the function's address
+		std::cerr << "Failed to create synthetic pen. Error " << GetLastError() << std::endl;
 	}
 }
 
@@ -54,23 +55,29 @@ void InjectionPenFrame(int x, int y, int pressure, int isTouching, TabletPacket 
 	penFrame.penInfo.penFlags = 0;
 	static bool wasTouching = false;
 
-	if (isTouching) {
-		penFrame.penInfo.pointerInfo.pointerFlags |=
-			POINTER_FLAG_INRANGE | POINTER_FLAG_INCONTACT;
+	// Fixed: every frame now carries exactly one of DOWN / UPDATE / UP.
+	//   pen touches down  -> INRANGE | INCONTACT | DOWN
+	//   pen drawing       -> INRANGE | INCONTACT | UPDATE
+	//   pen lifts         -> INRANGE | UP
+	//   pen hovering      -> INRANGE | UPDATE
+	POINTER_FLAGS flags = POINTER_FLAG_INRANGE;
 
-		if (!wasTouching)
-			penFrame.penInfo.pointerInfo.pointerFlags |= POINTER_FLAG_DOWN;
+	if (isTouching) {
+		flags |= POINTER_FLAG_INCONTACT;
+		flags |= wasTouching ? POINTER_FLAG_UPDATE : POINTER_FLAG_DOWN;
 	}
 	else {
-		penFrame.penInfo.pointerInfo.pointerFlags |= POINTER_FLAG_INRANGE;
-
-		if (wasTouching)
-			penFrame.penInfo.pointerInfo.pointerFlags |= POINTER_FLAG_UP;
+		flags |= wasTouching ? POINTER_FLAG_UP : POINTER_FLAG_UPDATE;
 	}
+
+	penFrame.penInfo.pointerInfo.pointerFlags = flags;
 
 	wasTouching = isTouching;
 
-	InjectSyntheticPointerInput(g_penDevice, &penFrame, 1);
+	// Fixed: check whether Windows accepted the frame
+	if (!InjectSyntheticPointerInput(g_penDevice, &penFrame, 1)) {
+		std::cerr << "\nInjection failed. Error " << GetLastError() << std::endl;
+	}
 }
 
 int main() {
@@ -95,7 +102,6 @@ int main() {
 
 	TabletPacket packet;
 	int server_len = sizeof(server);
-	int i = 0;
 	while (true) {
 		int res = recvfrom(s, (char*)&packet, sizeof(packet), 0, (struct sockaddr*)&server, &server_len);
 		if (res > 0) {
@@ -104,13 +110,13 @@ int main() {
 			int winPressure = (int)packet.pressure;
 
 			int winTouch = (int)packet.touch;
-			
+
 			std::cout << "X: " << winX
 				<< " | Y: " << winY
 				<< " | Pres: " << winPressure
 				<< " | Touch: " << (winTouch ? "DOWN" : "UP")
 				<< "      \r" << std::flush;
-			
+
 			InjectionPenFrame(winX, winY, winPressure, winTouch, packet);
 		}
 	}
