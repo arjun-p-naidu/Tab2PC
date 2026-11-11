@@ -1,0 +1,5 @@
+﻿  Main.cpp
+D:\VisualStudioProjects\UniProjects\LittleTab\Main.cpp(18,1): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  LittleTab.vcxproj -> D:\VisualStudioProjects\UniProjects\LittleTab\x64\Debug\LittleTab.exe
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.

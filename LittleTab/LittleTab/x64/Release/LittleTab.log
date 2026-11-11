@@ -1,0 +1,8 @@
+﻿  Main.cpp
+  Generating code
+  Previous IPDB was built with incompatible compiler, fall back to full compilation.
+  All 15 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  LittleTab.vcxproj -> D:\VisualStudioProjects\UniProjects\LittleTab\x64\Release\LittleTab.exe
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.
