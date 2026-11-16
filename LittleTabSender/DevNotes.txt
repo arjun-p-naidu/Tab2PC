@@ -1,0 +1,19 @@
+run .\vcpkg install asio:x64-windows on bigboi
+Step 3: Verify in Visual Studio
+Open your Visual Studio 2022 project.
+
+Right-click your Project in Solution Explorer -> Properties.
+
+Check vcpkg (it should now appear as a tab on the left).
+
+Ensure Use Vcpkg is set to Yes.
+
+usb-Wacom_Co._Ltd._Pen_and_multitouch_sensor-event-if00        usb-Wacom_Co._Ltd._Pen_and_multitouch_sensor-if01-hidraw
+usb-Wacom_Co._Ltd._Pen_and_multitouch_sensor-hidraw            usb-Wacom_Co._Ltd._Pen_and_multitouch_sensor-if01-mouse
+usb-Wacom_Co._Ltd._Pen_and_multitouch_sensor-if01-event-mouse
+
+abs_x max = 29360
+abs_x max = 19530
+
+
+
